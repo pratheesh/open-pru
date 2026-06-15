@@ -90,6 +90,7 @@ int main(void)
 				/* Clear the event status */
 				CT_INTC.STATUS_CLR_INDEX_REG_bit.STATUS_CLR_INDEX = FROM_ARM_HOST;
 				/* Receive all available messages. Multiple messages can be sent per kick */
+				len = sizeof(payload);
 				while (pru_rpmsg_receive(&transport, &src, &dst, payload, &len) == PRU_RPMSG_SUCCESS) {
 					/* On PRU_RPMSG_SUCCESS, the pointers will be valid.
 					 * On len=0, the assembly will never loop even once, so it is
@@ -120,6 +121,7 @@ int main(void)
 					      "r0.b0", "r0.b1");		/* clobbered registers (always 8-bit!) */
 					/* Echo the message back to the same address from which we just received */
 					pru_rpmsg_send(&transport, dst, src, payload, len);
+					len = sizeof(payload);
 				}
 			}
 		}

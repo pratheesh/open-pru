@@ -162,8 +162,9 @@ int16_t pru_rpmsg_init(
 *			     for which channel the message is intended on the PRU)
 *			data: a pointer that is populated with a local data buffer
 *			      containing the message payload
-*			len: a pointer that is populated with the length of the
-*			     message payload
+*			len: a pointer containing the size of the local data
+*			     buffer. This is populated with the length of the
+*			     message payload on success.
 *
 * Description	:	pru_rpmsg_receive uses the pru_virtqueue interface to get
 *			an available buffer, copy the buffer into local memory,
@@ -176,7 +177,10 @@ int16_t pru_rpmsg_init(
 * Return Value	:	Returns PRU_RPMSG_NO_BUF_AVAILABLE if there is currently no
 *			buffer available for receive. Returns PRU_RPMSG_INVALID_HEAD
 *			if the head index returned for the available buffer is
-*			invalid. Returns PRU_RPMSG_SUCCESS if the message is
+*			invalid. Returns PRU_RPMSG_BUF_TOO_SMALL if the local
+*			data buffer is too small for the received payload or if
+*			the virtqueue descriptor is too small for the RPMsg
+*			header. Returns PRU_RPMSG_SUCCESS if the message is
 *			successfully received.
 */
 int16_t pru_rpmsg_receive(

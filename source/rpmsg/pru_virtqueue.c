@@ -56,6 +56,13 @@ volatile register uint32_t __R31;
  */
 #define INT_OFFSET	16
 
+static inline void pru_virtqueue_memory_barrier(void)
+{
+#ifdef __GNUC__
+	__asm__ __volatile__ ("" : : : "memory");
+#endif
+}
+
 void pru_virtqueue_init(
 	struct pru_virtqueue 		*vq,
 	struct fw_rsc_vdev_vring 	*vring,
@@ -91,7 +98,12 @@ int16_t pru_virtqueue_get_avail_buf(
 	 * Grab the next descriptor number the ARM host is advertising, and
 	 * increment the last available index we've seen.
 	 */
-	head = avail->ring[vq->last_avail_idx++ & (vq->vring.num - 1)];
+	head = avail->ring[vq->last_avail_idx & (vq->vring.num - 1)];
+
+	if ((uint32_t)head >= vq->vring.num)
+		return PRU_VIRTQUEUE_INVALID_HEAD;
+
+	vq->last_avail_idx++;
 
 	desc = vq->vring.desc[head];
 	*buf = (void *)(uint32_t)desc.addr;
@@ -113,16 +125,18 @@ int16_t pru_virtqueue_add_used_buf(
 	num = vq->vring.num;
 	used = vq->vring.used;
 
-	if ((uint32_t)head > num)
+	if (head < 0 || (uint32_t)head >= num)
 		return PRU_VIRTQUEUE_INVALID_HEAD;
 
 	/*
 	 * The virtqueue's vring contains a ring of used buffers.  Get a pointer to
 	 * the next entry in that used ring.
 	 */
-	used_elem = &used->ring[used->idx++ & (num - 1)];
+	used_elem = &used->ring[used->idx & (num - 1)];
 	used_elem->id = head;
 	used_elem->len = len;
+	pru_virtqueue_memory_barrier();
+	used->idx++;
 
 	return PRU_VIRTQUEUE_SUCCESS;
 }

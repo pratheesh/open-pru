@@ -105,7 +105,14 @@ int16_t pru_rpmsg_send(
 	head = pru_virtqueue_get_avail_buf(virtqueue, (void **)&msg, &msg_len);
 
 	if (head < 0)
-		return PRU_RPMSG_NO_BUF_AVAILABLE;
+		return (head == PRU_VIRTQUEUE_INVALID_HEAD) ?
+			PRU_RPMSG_INVALID_HEAD : PRU_RPMSG_NO_BUF_AVAILABLE;
+
+	if (msg_len < (sizeof(struct pru_rpmsg_hdr) + len)) {
+		pru_virtqueue_add_used_buf(virtqueue, head, 0);
+		pru_virtqueue_kick(virtqueue);
+		return PRU_RPMSG_BUF_TOO_SMALL;
+	}
 
 	/* Copy local data buffer to the descriptor buffer address */
 	memcpy(msg->data, data, len);
@@ -144,8 +151,16 @@ int16_t pru_rpmsg_receive(
 	head = pru_virtqueue_get_avail_buf(virtqueue, (void **)&msg, &msg_len);
 
 	if (head < 0)
-		return PRU_RPMSG_NO_BUF_AVAILABLE;
+		return (head == PRU_VIRTQUEUE_INVALID_HEAD) ?
+			PRU_RPMSG_INVALID_HEAD : PRU_RPMSG_NO_BUF_AVAILABLE;
 
+	if (msg_len < sizeof(struct pru_rpmsg_hdr) ||
+	    msg->len > (msg_len - sizeof(struct pru_rpmsg_hdr)) ||
+	    msg->len > *len) {
+		pru_virtqueue_add_used_buf(virtqueue, head, msg_len);
+		pru_virtqueue_kick(virtqueue);
+		return PRU_RPMSG_BUF_TOO_SMALL;
+	}
 
 	/* Copy the message payload to the local data buffer provided */
 	memcpy(data, msg->data, msg->len);

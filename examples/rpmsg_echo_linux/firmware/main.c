@@ -107,9 +107,11 @@ void main(void)
 				/* Clear the event status */
 				CT_INTC.STATUS_CLR_INDEX_REG_bit.STATUS_CLR_INDEX = FROM_ARM_HOST;
 				/* Receive all available messages. Multiple messages can be sent per kick */
+				len = sizeof(payload);
 				while (pru_rpmsg_receive(&transport, &src, &dst, payload, &len) == PRU_RPMSG_SUCCESS) {
 					/* Echo the message back to the same address from which we just received */
 					pru_rpmsg_send(&transport, dst, src, payload, len);
+					len = sizeof(payload);
 				}
 			}
 		}
