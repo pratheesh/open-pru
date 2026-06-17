@@ -5,7 +5,7 @@ The project realizes a simple logic scope that uses two cores, PRU0 and RTU0, to
 
 ## Overview
 
-PRU cores can directly read certain input pins using their R30 registers. Since R30 has real-time information on the logic levels of these pins, a zero-overhead loop and indirect register addressing could be used to continuously transfer the samples to other registers, bytewise. The number of samples we can transfer continously in this case, is limited by the number of available registers in a single core. Once we are out of registers, with a single core, we have no other choice but to pause sampling to tranfer the collected samples to memory. 
+PRU cores can directly read certain input pins using their R30 registers. Since R30 has real-time information on the logic levels of these pins, a zero-overhead loop and indirect register addressing could be used to continuously transfer the samples to other registers, bytewise. The number of samples we can transfer continuously in this case, is limited by the number of available registers in a single core. Once we are out of registers, with a single core, we have no other choice but to pause sampling to transfer the collected samples to memory.
 
 The above mentioned restriction can be surpassed by making use of an extra core which can continue sampling after the first core fills up it's registers. This way, one core will always continue sampling while the other core stores the data that it sampled. The cores are selected as PRU and RTU since they will have access to the same input pins simultaneously. A conceptual timing diagram of the same is shown below:
 

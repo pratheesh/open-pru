@@ -453,7 +453,7 @@ Import the AM243x Test Application from the path mentioned in the project direct
 Import the F28379D Test Application project from ${C2000ware_path}\driverlib\f2837xd\examples\cpu1\emif\CCS path.Replace Source file &
 Setup file from pru_emif project directory.
 
-You can build the projects after a successfull export. 
+You can build the projects after a successful export.
 
 Pre-built PRU0 & PRU1 FW(firmware) images are contained in C header files located in:
 ${open-pru}/examples/pru_emif/pru_emif_app/firmware
@@ -628,5 +628,3 @@ PRU1 Firmware EMIF Write Program Flow
 <tr><td>21</td><td>n Write 16-bit Read Back 32-bit, EOB</td><td>F283879D write n 16-bit, read back n/2 32-bit words to/from AM243x DPM.<br>Write immediately before read in loop.<br>Write/read toward end of DPM buffer.</td><td>PASS</td><td>n=8</td></tr>
 <tr><td>22</td><td>n Write 32-bit Read Back 16-bit, SOB</td><td>F283879D write n/2 32-bit, read back n 16-bit words to/from AM243x DPM.<br>Write immediately before read in loop.<br>Write/read toward start of DPM buffer.</td><td>PASS</td><td>n=8</td></tr>
 <tr><td>23</td><td>n Write 32-bit Read Back 16-bit, EOB</td><td>F283879D write n/2 32-bit, read back n 16-bit words to/from AM243x DPM.<br>Write immediately before read in loop.<br>Write/read toward end of DPM buffer.</td><td>PASS</td><td>n=8</td></tr>
-
-
