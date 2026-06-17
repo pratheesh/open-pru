@@ -8,8 +8,8 @@
 
 This example demonstrates usage of PRU-ICSSG to emulate EMIF(Extended Memory Interface) client 16-bit/32-bit asynchronous parallel interface to interface with C2K F28379D.
 The F283879D initiates requests for 16-bit or 32-bit reads/writes over EMIF1 & PRU_ICSSG respond to these requests.PRU firmware (PRUEMIF16) executing on AM243x
-ICSSG PRU cores has been implemented to emulate the EMIF interface to repsond to 16 bit reads/writes. 
-It also responds to 32 bit reads/writes by converting into two 16 bit read/writes request seperately. 
+ICSSG PRU cores has been implemented to emulate the EMIF interface to respond to 16 bit reads/writes.
+It also responds to 32 bit reads/writes by converting into two 16 bit read/writes request separately.
 
 
 ## Setup Details
@@ -463,7 +463,7 @@ firmware unless the firmware is modified.
 
 However The PRU EMIF16 firmware code can be modified and rebuilt if desired. The PRU0 and PRU1 firmware
 images are built separately.
-To build the firmware import the firmware project from the project directory and build them seperately for PRU0 & PRU1. 
+To build the firmware import the firmware project from the project directory and build them separately for PRU0 & PRU1.
 
 ## Target Configuration 
 
@@ -473,7 +473,7 @@ Please follow the steps below :
 - Right Click -> New Target Configuration 
 - Create a new target configuration with desired file name (i.e XDS100v2_XDS100.ccxml)
 - Go to Advanced target configuration 
-    - ![Advaned Target Configuration](images/Target_config_2.png)
+    - ![Advanced Target Configuration](images/Target_config_2.png)
 - Initiate two new connections 
     - XDS100v2 Debug Probe
     - XDS110 USB Debug Probe 
@@ -481,7 +481,7 @@ Please follow the steps below :
     - TMS32028379D
     - AM243x_GP_EVM
 - Target Configuration should look like this 
-    - ![Advaned Target Configuration](images/Target_Config_3.png)
+    - ![Advanced Target Configuration](images/Target_Config_3.png)
 - Save the configuration 
 
 ## Debug
@@ -549,7 +549,7 @@ PRU0 Firmware Top Level Program Flow
 ![PRU0 FIRMWARE TOP LEVEL](images/PRU0_FIRMWARE_TOP_LEVEL.png)
 
 ***
-PRU0 Firmware EMIF Read Progarm Flow
+PRU0 Firmware EMIF Read Program Flow
 
 ![PRU0_Firmware__EMIF_Read](images/PRU0_Firmware__EMIF_Read.png)
 
@@ -587,7 +587,7 @@ PRU1 Firmware Top Level Program Flow
 ![PRU1 FIRMWARE TOP LEVEL](images/PRU1_Firmware_Top_Level.png)
 
 ***
-PRU1 Firmware EMIF Read Progarm Flow  
+PRU1 Firmware EMIF Read Program Flow
 
 ![PRU1_Firmware__EMIF_Read](images/PRU1_Firmware_EMIF_Read.png)
 

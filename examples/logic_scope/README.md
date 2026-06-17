@@ -15,7 +15,7 @@ The cores have to be synchronized once before they wait for the trigger together
 
 ## Configuration
 
-1. dcls_config_macros.inc contains all the configurations for DCLS. It is imortant to note that required configurations are to be done in this file for both cores
+1. dcls_config_macros.inc contains all the configurations for DCLS. It is important to note that required configurations are to be done in this file for both cores
 
 2. 8 channels are sampled simultaneously. Set the channel Byte to be sampled as 0, 1, or 2. For GPI0-GPI7, channel Byte is 0. Note that depending on the availability of pins, changing the Byte number will reduce the number of usable channels. 
     ```
