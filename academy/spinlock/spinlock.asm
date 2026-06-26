@@ -41,6 +41,14 @@ INT_SPIN_XID    .set    0x90    ; broadside XID for the local PRU spinlock
 ;   Calling convention (PRU C/C++ compiler): the uint8_t argument arrives in
 ;   R14.b0 and the uint8_t return value is passed back in R14.b0. The return
 ;   address is in r3.w2.
+;
+;   Pseudocode:
+;       R1.b0 = flag_id                 ; present lock id to the accelerator
+;       XIN(XID 0x90) -> R1.b3          ; one acquire attempt, bit0 = acquired
+;       return R1.b3                    ; 1 = acquired, 0 = held by another
+;
+;   Registers modified : R1 (R1.b0, R1.b3), R14.b0 (return value)
+;   Peak Cycles : 4 (one acquire attempt; excludes any C-side retry spin)
 ;******************************************************************************
     .sect       ".text:spinlock_acquire"
     .clink
@@ -56,6 +64,16 @@ spinlock_acquire:
 ;
 ;   Release spinlock 'flag_id'. Only the owner should release, and it must do
 ;   so promptly.
+;
+;   Calling convention (PRU C/C++ compiler): the uint8_t argument arrives in
+;   R14.b0. The return address is in r3.w2.
+;
+;   Pseudocode:
+;       R1.b0 = flag_id                 ; present lock id to the accelerator
+;       XOUT(XID 0x90)                  ; free the lock
+;
+;   Registers modified : R1.b0
+;   Peak Cycles : 3
 ;******************************************************************************
     .sect       ".text:spinlock_release"
     .clink
