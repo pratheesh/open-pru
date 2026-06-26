@@ -60,6 +60,13 @@ static inline void pru_virtqueue_memory_barrier(void)
 {
 #ifdef __GNUC__
 	__asm__ __volatile__ ("" : : : "memory");
+#else
+	/* TI clpru (non-GNU): an empty asm() statement is treated as a
+	 * volatile optimization barrier; the compiler will not reorder
+	 * memory accesses across it. On the in-order PRU core (no hardware
+	 * store reordering) this is sufficient to guarantee the used-ring
+	 * entry is published before used->idx is incremented. */
+	__asm(" ");
 #endif
 }
 
