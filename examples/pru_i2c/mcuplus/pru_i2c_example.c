@@ -415,7 +415,8 @@ void pru_i2c_example_main(void *args)
     int32_t  status;
     int32_t  testStatus = SystemP_SUCCESS;
 
-    Drivers_open(); // check return status
+    status = Drivers_open();
+    DebugP_assert(SystemP_SUCCESS == status);
 
     status = Board_driversOpen();
     DebugP_assert(SystemP_SUCCESS == status);
