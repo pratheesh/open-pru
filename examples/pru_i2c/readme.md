@@ -32,6 +32,14 @@ per-project" in the [examples readme](../readme.md). Only the AM261x-LP has
 build infrastructure for this project; building for any other device prints
 "does not have a build option" and builds nothing.
 
+# AM263x-LP bench (not validated)
+
+`firmware/am263x-lp/icss_m0_pru1_fw` and `mcuplus/am263x-lp/r5fss0-0_nortos` run the same PRU I2C master on PRU1 of the LP-AM263,
+bit-banging PR0_PRU1_GPIO7 (SCL, ball A16, J8-74) and PR0_PRU1_GPIO17 (SDA, ball D13, J8-73), wired to the I2C1 bus of the board
+(J5-49 / J5-50). The R5F app is a bench harness (one test arm per run, results in an MSRAM block), not the demo above. It has been
+built and host-tested only. See [am263x-lp-bench.md](am263x-lp-bench.md) for the pin facts, the open-drain method, the 200 MHz timing
+arithmetic, the bus-ownership rule and the list of what is not verified.
+
 # Validated HW & SW
 
 This example has **not been validated on hardware**. It has only been built.

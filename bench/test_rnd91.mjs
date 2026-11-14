@@ -9,9 +9,9 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
-import { pathToFileURL } from "node:url";
+import { pathToFileURL, fileURLToPath } from "node:url";
 
-const HERE = path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1"));
+const HERE = path.dirname(fileURLToPath(import.meta.url));
 const lib = await import(pathToFileURL(path.join(HERE, "rnd91_lib.mjs")).href);
 const session = await import(pathToFileURL(path.join(HERE, "rnd91_session.mjs")).href);
 const { decodeBlock, judgeArm, judgeCommon, checkOrdering, armPlan, runPlan, loadLayout, HEADER, IFACE } = lib;
@@ -138,14 +138,15 @@ if (have) {
 // ---- session launch gate ----------------------------------------------------------------------------
 const tmpRuns = fs.mkdtempSync(path.join(os.tmpdir(), "rnd91-runs-"));
 fs.mkdirSync(path.join(tmpRuns, "usedtag"));
-const R = session.refusal;
-check(R({ dry: false, tag: undefined, runsDir: tmpRuns, holder: "1234" }) !== null, "session: refuses live without --live <tag>");
-check(R({ dry: false, tag: "usedtag", runsDir: tmpRuns, holder: "1234" }) !== null, "session: refuses a tag that is not fresh");
-check(R({ dry: false, tag: "../x", runsDir: tmpRuns, holder: "1234" }) !== null, "session: refuses a tag with path characters");
-check(R({ dry: false, tag: "freshtag1", runsDir: tmpRuns, holder: undefined }) !== null, "session: refuses live outside waitrun (no lock holder)");
-check(R({ dry: false, tag: "freshtag1", runsDir: tmpRuns, holder: "1234", boardsEnv: "am243,am263" }) !== null, "session: refuses when the boards are not am263 only");
-check(R({ dry: false, tag: "freshtag1", runsDir: tmpRuns, holder: "1234", boardsEnv: "am263" }) === null, "session: accepts a fresh tag under waitrun for am263");
-check(R({ dry: true, tag: undefined }) === null, "session: dry run needs no tag");
+const refuses = (o) => { try { return typeof session.refusal(o) === "string"; } catch (e) { return false; } };
+const accepts = (o) => { try { return session.refusal(o) === null; } catch (e) { return false; } };
+check(refuses({ dry: false, tag: undefined, runsDir: tmpRuns, holder: "1234" }), "session: refuses live without --live <tag>");
+check(refuses({ dry: false, tag: "usedtag", runsDir: tmpRuns, holder: "1234" }), "session: refuses a tag that is not fresh");
+check(refuses({ dry: false, tag: "../x", runsDir: tmpRuns, holder: "1234" }), "session: refuses a tag with path characters");
+check(refuses({ dry: false, tag: "freshtag1", runsDir: tmpRuns, holder: undefined }), "session: refuses live outside waitrun (no lock holder)");
+check(refuses({ dry: false, tag: "freshtag1", runsDir: tmpRuns, holder: "1234", boardsEnv: "am243,am263" }), "session: refuses when the boards are not am263 only");
+check(accepts({ dry: false, tag: "freshtag1", runsDir: tmpRuns, holder: "1234", boardsEnv: "am263" }), "session: accepts a fresh tag under waitrun for am263");
+check(accepts({ dry: true, tag: undefined }), "session: dry run needs no tag");
 
 fs.rmSync(outDir, { recursive: true, force: true });
 fs.rmSync(tmpRuns, { recursive: true, force: true });
