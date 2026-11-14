@@ -5,7 +5,7 @@ include ../../imports.mak
 #######################
 
 PROJECT_NAME := pru_i2c
-SUPPORTED_PROCESSORS := am261x
+SUPPORTED_PROCESSORS := am261x am263x
 # Does the PRU code have dependencies outside of the open-pru repo?
 PRU_DEPENDENCIES :=
 # Use NON_PRU_DEPENDENCIES to select which makefiles to call for non-PRU cores
@@ -90,6 +90,14 @@ am261x:
 # am261x-lp
 	$(MAKE) -C firmware/am261x-lp/icss_m0_pru0_fw/ti-pru-cgt $(ARGUMENTS_PRU)
 	$(MAKE) -C firmware/am261x-lp/icss_m0_pru1_fw/ti-pru-cgt $(ARGUMENTS_PRU)
+
+am263x:
+# am263x-lp (PRU1 only)
+	$(MAKE) -C firmware/am263x-lp/icss_m0_pru1_fw/ti-pru-cgt $(ARGUMENTS_PRU)
+
+am263x_mcuplus:
+# am263x-lp
+	$(MAKE) -C mcuplus/am263x-lp/r5fss0-0_nortos/ti-arm-clang $(ARGUMENTS_MCUPLUS)
 
 am261x_mcuplus:
 # am261x-lp

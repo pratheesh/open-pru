@@ -83,13 +83,22 @@ BANK0                 .set    10
 BANK1                 .set    11
 BANK2                 .set    12
 
-; MSS_CTRL ICSSMx_PRUy_GPIO_OUT_CTRL (AM261x, cslr_mss_ctrl.h). Setting a bit
-; disables the output driver of that PRU GPO pin, which releases the line to
-; the external pull-up. Used to hand SDA to the target for ACK and read data.
+; MSS_CTRL ICSSMx_PRUy_GPIO_OUT_CTRL. Setting a bit disables the output
+; driver of that PRU GPO pin, which releases the line to the external
+; pull-up. Used to hand SDA to the target for ACK and read data.
+; The registers sit at different offsets from the MSS_CTRL base 0x50D00000
+; on each device (cslr_mss_ctrl.h of the MCU+ SDK):
+;   AM261x: ICSSM0_PRU0/1 0x810/0x814, ICSSM1_PRU0/1 0x818/0x81C
+;   AM263x: ICSSM_PRU0/1  0x824/0x828 (one ICSSM instance, bits 0..29)
+    .if $defined("SOC_AM263X")
+ICSSM0_PRU0_GPIO_OUT_CTRL           .set    0x50D00824
+ICSSM0_PRU1_GPIO_OUT_CTRL           .set    0x50D00828
+    .else
 ICSSM0_PRU0_GPIO_OUT_CTRL           .set    0x50D00810
 ICSSM0_PRU1_GPIO_OUT_CTRL           .set    0x50D00814
 ICSSM1_PRU0_GPIO_OUT_CTRL           .set    0x50D00818
 ICSSM1_PRU1_GPIO_OUT_CTRL           .set    0x50D0081C
+    .endif
 
 ; Per-core resources. The IEP and the scratchpad banks are shared by both
 ; PRUs, so each core must use its own compare register, status bit, enable
