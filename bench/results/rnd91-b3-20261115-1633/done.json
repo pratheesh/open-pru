@@ -1,0 +1,173 @@
+{
+  "tag": "rnd91-b3-20261115-1633",
+  "board": "am263",
+  "startedAt": "2026-11-15T11:05:04.928Z",
+  "images": {
+    "r5f": "c5ae8dbb7a2834c9e4a2651dc3bccd1d",
+    "pru1": "8f6df11f44b43fdcdd532ca591d0f7a3",
+    "pru1_load_bin_h": "566cf666471fcd459ec79ef7b760e792"
+  },
+  "status": "PASS",
+  "arms": [
+    {
+      "name": "R0",
+      "status": "PASS",
+      "reasons": [],
+      "notes": [
+        "R0 data 000102030405060708090a0b0c0d0e0f"
+      ]
+    },
+    {
+      "name": "P1@100k",
+      "status": "PASS",
+      "reasons": [],
+      "notes": []
+    },
+    {
+      "name": "P2@100k",
+      "status": "PASS",
+      "reasons": [],
+      "notes": [
+        "P2 data 000102030405060708090a0b0c0d0e0f"
+      ]
+    },
+    {
+      "name": "C3",
+      "status": "PASS",
+      "reasons": [],
+      "notes": [
+        "C3 0x44 readback (not gated): write status 0, read status 0, value 0xff"
+      ]
+    },
+    {
+      "name": "P3@100k",
+      "status": "PASS",
+      "reasons": [],
+      "notes": []
+    },
+    {
+      "name": "P4@100k",
+      "status": "PASS",
+      "reasons": [],
+      "notes": []
+    },
+    {
+      "name": "P1@400k",
+      "status": "PASS",
+      "reasons": [],
+      "notes": []
+    },
+    {
+      "name": "P2@400k",
+      "status": "PASS",
+      "reasons": [],
+      "notes": [
+        "P2 data 000102030405060708090a0b0c0d0e0f"
+      ]
+    },
+    {
+      "name": "P3@400k",
+      "status": "PASS",
+      "reasons": [],
+      "notes": []
+    },
+    {
+      "name": "P4@400k",
+      "status": "PASS",
+      "reasons": [],
+      "notes": []
+    }
+  ],
+  "events": [
+    {
+      "at": "2026-11-15T11:05:13.600Z",
+      "msg": "jtag scan: ok (4 bits)"
+    },
+    {
+      "at": "2026-11-15T11:05:17.700Z",
+      "msg": "CCS worker connected"
+    },
+    {
+      "at": "2026-11-15T11:05:17.701Z",
+      "msg": "arm R0: requested (cookie 0x52000001)"
+    },
+    {
+      "at": "2026-11-15T11:05:19.323Z",
+      "msg": "arm P1@100k: requested (cookie 0x52000002)"
+    },
+    {
+      "at": "2026-11-15T11:05:20.961Z",
+      "msg": "arm P2@100k: requested (cookie 0x52000003)"
+    },
+    {
+      "at": "2026-11-15T11:05:22.406Z",
+      "msg": "arm C3: requested (cookie 0x52000004)"
+    },
+    {
+      "at": "2026-11-15T11:05:24.089Z",
+      "msg": "arm P3@100k: requested (cookie 0x52000005)"
+    },
+    {
+      "at": "2026-11-15T11:05:26.131Z",
+      "msg": "arm P4@100k: requested (cookie 0x52000006)"
+    },
+    {
+      "at": "2026-11-15T11:05:27.969Z",
+      "msg": "arm P1@400k: requested (cookie 0x52000007)"
+    },
+    {
+      "at": "2026-11-15T11:05:29.388Z",
+      "msg": "arm P2@400k: requested (cookie 0x52000008)"
+    },
+    {
+      "at": "2026-11-15T11:05:31.027Z",
+      "msg": "arm P3@400k: requested (cookie 0x52000009)"
+    },
+    {
+      "at": "2026-11-15T11:05:33.281Z",
+      "msg": "arm P4@400k: requested (cookie 0x5200000a)"
+    },
+    {
+      "at": "2026-11-15T11:05:35.123Z",
+      "msg": "arm R0: PASS"
+    },
+    {
+      "at": "2026-11-15T11:05:35.123Z",
+      "msg": "arm P1@100k: PASS"
+    },
+    {
+      "at": "2026-11-15T11:05:35.123Z",
+      "msg": "arm P2@100k: PASS"
+    },
+    {
+      "at": "2026-11-15T11:05:35.123Z",
+      "msg": "arm C3: PASS"
+    },
+    {
+      "at": "2026-11-15T11:05:35.123Z",
+      "msg": "arm P3@100k: PASS"
+    },
+    {
+      "at": "2026-11-15T11:05:35.123Z",
+      "msg": "arm P4@100k: PASS"
+    },
+    {
+      "at": "2026-11-15T11:05:35.123Z",
+      "msg": "arm P1@400k: PASS"
+    },
+    {
+      "at": "2026-11-15T11:05:35.123Z",
+      "msg": "arm P2@400k: PASS"
+    },
+    {
+      "at": "2026-11-15T11:05:35.123Z",
+      "msg": "arm P3@400k: PASS"
+    },
+    {
+      "at": "2026-11-15T11:05:35.123Z",
+      "msg": "arm P4@400k: PASS"
+    }
+  ],
+  "endedAt": "2026-11-15T11:05:35.124Z",
+  "runtimeS": 30
+}

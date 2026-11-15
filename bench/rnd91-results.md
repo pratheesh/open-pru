@@ -1,4 +1,8 @@
-**Branch note:** the silicon results below were measured on firmware at 8aac84c1 plus the AM263x port. This branch (rnd91-am263-i2c-pr172) re-targets PR #172 head 8f4c1c2c (one IRQ flag byte per instance), which is not yet run on silicon.
+**Branch note:** this branch (rnd91-am263-i2c-pr172) is open-pru PR #172 head 8f4c1c2c (one IRQ flag byte per
+instance) plus the AM263x port and bench. Run 3, `rnd91-b3-20261115-1633` (30 s, images r5f c5ae8dbb, pru1 8f6df11f,
+commit 35bfca8d), ran this firmware on silicon and **passed all ten arms**, with the same data as run 2: C3 control
+reads 0x5A; P3 reads back 0x55/0xAA/0x00 at both rates; P4 restores 0x53:0x0400 to 00..07 at both rates. Runs 1 and 2
+below were on the parent firmware 8aac84c1 plus the AM263x port.
 
 # RND-91 results: PRU I2C master on LP-AM263, silicon (2026-11-15)
 
