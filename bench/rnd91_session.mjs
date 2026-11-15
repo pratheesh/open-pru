@@ -13,7 +13,8 @@
 //
 // Arms, stopping at the first failure (see rnd91_lib.mjs armPlan/judgeArm):
 //   R0 R5F-only read of 0x53:0x0400 | at 100 kHz then 400 kHz: P1 probe 0x61/0x52/0x53 ACK, 0x10/0x21 NACK;
-//   P2 PRU read of the same 16 bytes vs R0; P3 TPIC2810 patterns 0x55/0xAA/0x00; P4 EEPROM write+restore.
+//   P2 PRU read of the same 16 bytes vs R0; C3 (100 kHz only, MCU-only control) proves the TPIC2810 readback;
+//   P3 TPIC2810 patterns 0x55/0xAA/0x00 as PRU write [0x11,p], MCU read, PRU write [0x22]; P4 EEPROM write+restore.
 // Each arm is one R5F run: the image is loaded, the block cleared, the request written, the core run until
 // the app reports DONE/ABORT. Recovery: only if the JTAG scan fails before the first arm, one outlet-4
 // power cycle (am263's own outlet, lab.json), under the lock waitrun holds.

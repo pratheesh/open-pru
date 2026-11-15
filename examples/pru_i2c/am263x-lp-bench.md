@@ -1,9 +1,22 @@
 # PRU I2C on the LP-AM263: PRU1 bench (RND-91)
 
-Desk work. **Nothing here has run on silicon.** The PRU firmware and the R5F app were built (clpru 2.3.3,
+Status: the first silicon run (rnd91-b1-20261115-1547) is recorded in "First silicon result" below; everything the
+text does not mark as run on silicon is still desk work. The PRU firmware and the R5F app were built (clpru 2.3.3,
 tiarmclang 4.0.4, SysConfig 1.28, MCU+ SDK AM263x 26.01.00.08) and the logic was tested on the host against a fake
 bus. The AM263x TRM is not on the PC, so every register-level statement below that is not an SDK file citation is
 marked UNVERIFIED.
+
+## First silicon result (run rnd91-b1-20261115-1547, 100 kHz)
+
+- **PASS on silicon:** R0 (R5F read of 0x53:0x0400), P1@100k (the PRU master ACKs 0x61/0x52/0x53 and NACKs 0x10/0x21: response words
+  0x500 and 0x508), P2@100k (the PRU 16-byte read of 0x53:0x0400 equals the R5F read, `00 01 .. 0f`). So the pins, the OUT_CTRL
+  release and the 100 kHz timing work for reads and address phases.
+- **FAIL: P3@100k.** For patterns 0x55, 0xAA and 0x00 the PRU write `0x44 <pattern>` returned 0x500 (ACK) and the MCU read of 0x61
+  returned status 0 with value 0xFF every time.
+- **Diagnosis (desk, not proven):** the SDK example `examples/drivers/i2c/i2c_led_read_write_lld/i2c_led_read_write_lld.c` never
+  reads after 0x44 (lines 43-46 and 105-135). Its verified sequence is write `[0x11, mask]` (write the shift register), read 1
+  byte (returns the shift register, compared with the mask), then write `[0x22]` (load the outputs). A read after 0x44 is not a
+  sequence the SDK relies on, so 0xFF there says nothing about the PRU. The 400 kHz arms and P4 had not run (stop at first failure).
 
 ## Wiring the bench has (fitted by hand)
 
@@ -95,26 +108,39 @@ region marks it non-cached so a JTAG read sees the R5F's writes): see the `RND91
 | offset | content |
 |---|---|
 | 0x000-0x00C | magic `R91B`, version 1, state (0 cleared, 1 running, 2 done, 3 abort), stage counter |
-| 0x010-0x01C | request: `R91Q`, arm (1 R0, 2 P1, 3 P2, 4 P3, 5 P4), Hz, cookie |
+| 0x010-0x01C | request: `R91Q`, arm (1 R0, 2 P1, 3 P2, 4 P3, 5 P4, 6 C3), Hz, cookie |
 | 0x020-0x034 | error code, IEP increment, clocks/tick, SCL timeout ticks, frequency selector, SCL Hz |
 | 0x040-0x0C0 | event log (32 words `code<<24 \| arg`) |
-| 0x0C4-0x0E4 | per PRU stop: CONTROL register and OUT_CTRL as read back |
+| 0x0C4-0x0E4 | per PRU stop (first four): CONTROL register and OUT_CTRL as read back; stops 5-8 at 0x240-0x25C |
 | 0x100-0x114 | R0: MCU read status, 16 bytes of 0x53:0x0400 |
 | 0x120-0x148 | P1: probe results `addr<<16 \| PRU response` |
 | 0x150-0x164 | P2: PRU response, 16 bytes |
-| 0x170-0x1A4 | P3: 3 x {pattern, PRU response, MCU status, MCU value} |
+| 0x170-0x1A4 | P3: 3 x {pattern, PRU response of the `[0x11,p]` write, MCU status, MCU value}; the `[0x22]` load responses at 0x230 |
 | 0x1B0-0x1E4 | P4: original, response, written bytes, readback 1, restore response, readback 2, flags |
+| 0x200-0x220 | C3: step count, control write/read/value/load, 0x44 write/read/value, LEDs-off status |
 | 0x3FC | canary `$END` |
 
 ## Arms (session order, stops at the first failure)
 
-R0 (R5F-only read of 0x53:0x0400, proves the bus) then, at 100 kHz and again at 400 kHz:
+R0 (R5F-only read of 0x53:0x0400, proves the bus) then, at 100 kHz: P1, P2, C3, P3, P4; then at 400 kHz: P1, P2, P3, P4.
 P1 probe by a 1-byte PRU read: 0x61, 0x52, 0x53 must ACK, 0x10 and 0x21 must NACK (a read is harmless on all of them); P2 PRU read of
-16 bytes at 0x53:0x0400 equals R0; P3 PRU writes TPIC2810 `0x44 <pattern>` for 0x55, 0xAA, 0x00 and the MCU reads 0x61 back after
-each (the TPIC2810 read is documented only by the SDK example `i2c_led_read_write_lld.c`: no datasheet was read; a failed MCU readback
-is recorded "visual only", a wrong value fails); P4 saves 8 bytes at 0x53:0x0400, writes their complement, MCU readback, PRU restore, MCU
-readback. P4 never writes before the original is saved and always attempts the restore once a write started; the original is also in
-the block if the app dies in between. `0x52` is never written, `0x53` never below `0x0400` (asserted in the host test).
+16 bytes at 0x53:0x0400 equals R0.
+
+- **C3 (new, MCU only, once, 100 kHz, before P3).** The MCU writes `[0x11, 0x5A]`, reads 1 byte and the read must equal 0x5A (the
+  control that proves the readback method), writes `[0x22]`. Then it writes `[0x44, 0xA5]`, reads, and only RECORDS the value (not
+  gated: it documents the 0x44 readback seen on silicon). It ends with `[0x11,0x00]`, `[0x22]` so the LEDs are off.
+- **P3 (changed).** Per pattern 0x55, 0xAA, 0x00: a PRU phase writes `[0x11, pattern]`; the PRU is stopped and both lines released
+  (guard-proven) before the MCU opens; the MCU reads 1 byte from 0x61 (must equal the pattern); a second PRU phase writes the 1-byte
+  `[0x22]` (must ACK). Six PRU phases and three MCU opens, all through the same guard, so the strict ownership rule is unchanged.
+  The readback is now a gate (the old "visual only" allowance is gone). The PRU write path takes the byte count from the CNT word,
+  so a 1-byte write needs no firmware change; **UNVERIFIED** that the PRU firmware sends a correct 1-byte write on the wire.
+- P4 saves 8 bytes at 0x53:0x0400, writes their complement, MCU readback, PRU restore, MCU readback. P4 never writes before the
+  original is saved and always attempts the restore once a write started; the original is also in the block if the app dies in between.
+  `0x52` is never written, `0x53` never below `0x0400` (asserted in the host test).
+
+The TPIC2810 sequence is documented only by the SDK example (no datasheet was read). The host test models it (0x11 sets the shift
+register, a read returns it, 0x22 loads the outputs, a read after 0x44 returns 0xFF as on silicon); that model is the silicon
+observation plus the SDK sequence, not a datasheet.
 
 ## Build, test, run
 
@@ -136,6 +162,6 @@ four times on this PC; a partial rebuild over stale objects did not, so build cl
 ## Not verified (needs the bench)
 
 PRU reachability of MSS_CTRL and the OUTDISABLE polarity; R30/R31 bit = GPIO number; that the R5F image reload per arm (halt, load,
-run, no CPU reset) comes up clean; JTAG reads of the block while the core spins; the TPIC2810 read; the 367 kHz waveform and rise
+run, no CPU reset) comes up clean; JTAG reads of the block while the core spins; the new P3 sequence (`[0x11,p]` by the PRU, MCU readback, `[0x22]` by the PRU) and C3; the 1-byte PRU write; the 367 kHz waveform and rise
 time; EEPROM page-write behaviour of CAT23M01 through the PRU's write-pointer-then-read sequence (the same sequence the upstream
 example uses, never run on a device).

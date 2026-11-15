@@ -34,7 +34,7 @@ export function loadLayout() {
     return L;
 }
 
-export const ARM_NAMES = { 1: "R0", 2: "P1", 3: "P2", 4: "P3", 5: "P4" };
+export const ARM_NAMES = { 1: "R0", 2: "P1", 3: "P2", 4: "P3", 5: "P4", 6: "C3" };
 export const EV_NAMES = {
     1: "START", 2: "ARM_BEGIN", 3: "PRU_START", 4: "PRU_STOPPED", 5: "LINES_RELEASED",
     6: "MCU_OPEN", 7: "MCU_CLOSE", 8: "ARM_END", 9: "REFUSED",
@@ -63,6 +63,11 @@ export function decodeBlock(buf, L = loadLayout()) {
     for (let i = 0; i < Math.min(stopN, L.RND91_STOP_MAX); i++) {
         stops.push({ ctrl: w(L.RND91_OFF_STOP_CTRL + 4 * i), outCtrl: w(L.RND91_OFF_STOP_OUTCTRL + 4 * i) });
     }
+    for (let i = 0; i < Math.min(stopN - L.RND91_STOP_MAX, L.RND91_STOP_X_MAX); i++) {
+        stops.push({ ctrl: w(L.RND91_OFF_STOP_X_CTRL + 4 * i), outCtrl: w(L.RND91_OFF_STOP_X_OUTCTRL + 4 * i) });
+    }
+    // stops beyond the recorded capacity were not captured: the judge fails on that, it never assumes they were fine
+    const stopsLost = Math.max(0, stopN - L.RND91_STOP_MAX - L.RND91_STOP_X_MAX);
     const probeN = Math.min(w(L.RND91_OFF_PROBE_N), L.RND91_PROBE_MAX);
     const probe = [];
     for (let i = 0; i < probeN; i++) {
@@ -73,7 +78,7 @@ export function decodeBlock(buf, L = loadLayout()) {
     const p3 = [];
     for (let i = 0; i < p3n; i++) {
         const e = L.RND91_OFF_P3 + L.RND91_P3_STRIDE * i;
-        p3.push({ pattern: w(e), pruResp: w(e + 4), mcuStatus: w(e + 8) | 0, value: w(e + 12) });
+        p3.push({ pattern: w(e), pruResp: w(e + 4), mcuStatus: w(e + 8) | 0, value: w(e + 12), loadResp: w(L.RND91_OFF_P3_LOAD + 4 * i) });
     }
     return {
         valid: true,
@@ -85,10 +90,15 @@ export function decodeBlock(buf, L = loadLayout()) {
             iepInc: w(L.RND91_OFF_IEP_INC), tickClks: w(L.RND91_OFF_TICK_CLKS), sclTmoTicks: w(L.RND91_OFF_SCL_TMO_TICKS),
             freqSel: w(L.RND91_OFF_FREQ_SEL), sclHz: w(L.RND91_OFF_SCL_HZ),
         },
-        evCount, events, stops, probe,
+        evCount, events, stops, stopN, stopsLost, probe,
         r0: { status: w(L.RND91_OFF_R0_STATUS) | 0, data: bytes(L.RND91_OFF_R0_DATA, 16) },
         p2: { resp: w(L.RND91_OFF_P2_RESP), data: bytes(L.RND91_OFF_P2_DATA, 16) },
         p3,
+        c3: {
+            n: w(L.RND91_OFF_C3_N), wr1: w(L.RND91_OFF_C3_WR1) | 0, rd1: w(L.RND91_OFF_C3_RD1) | 0, rd1Val: w(L.RND91_OFF_C3_RD1_VAL),
+            ld1: w(L.RND91_OFF_C3_LD1) | 0, wr2: w(L.RND91_OFF_C3_WR2) | 0, rd2: w(L.RND91_OFF_C3_RD2) | 0, rd2Val: w(L.RND91_OFF_C3_RD2_VAL),
+            off: w(L.RND91_OFF_C3_OFF) | 0,
+        },
         p4: {
             origResp: w(L.RND91_OFF_P4_ORIG_RESP), orig: bytes(L.RND91_OFF_P4_ORIG, 8),
             wrResp: w(L.RND91_OFF_P4_WR_RESP), newData: bytes(L.RND91_OFF_P4_NEW, 8),
@@ -163,6 +173,7 @@ export function judgeCommon(d, ctx, L = loadLayout()) {
     if (d.err !== 0) reasons.push(`app error ${d.err}`);
     if (d.evCount > L.RND91_EV_MAX) reasons.push(`event log overflow (${d.evCount} > ${L.RND91_EV_MAX})`);
     for (const b of checkOrdering(d.events, L)) reasons.push(`ordering: ${b}`);
+    if (d.stopsLost > 0) reasons.push(`stop log overflow: ${d.stopsLost} PRU stops were not recorded`);
     d.stops.forEach((s, i) => {
         const running = (s.ctrl & (L.RND91_CTRL_ENABLE | L.RND91_CTRL_RUNNING)) !== 0;
         const released = (s.outCtrl & L.RND91_PIN_MASK) === L.RND91_PIN_MASK;
@@ -200,19 +211,27 @@ export function judgeArm(armId, d, ctx, L = loadLayout()) {
             else if (!eq(d.p2.data, ctx.r0Data)) reasons.push(`P2: PRU read ${hexb(d.p2.data)} != R0 ${hexb(ctx.r0Data)}`);
             notes.push(`P2 data ${hexb(d.p2.data)}`);
             break;
-        case 4: { // P3
+        case 4: { // P3: PRU writes [0x11,pattern], MCU reads it back, PRU writes [0x22]
             const want = [0x55, 0xaa, 0x00];
             if (d.p3.length !== want.length) reasons.push(`P3: ${d.p3.length} entries, want ${want.length}`);
             d.p3.forEach((e, i) => {
                 if (e.pattern !== want[i]) reasons.push(`P3[${i}]: pattern 0x${e.pattern.toString(16)}, want 0x${want[i].toString(16)}`);
-                if (e.pruResp !== R.ACK) reasons.push(`P3[${i}]: PRU write response 0x${e.pruResp.toString(16)}`);
-                if (e.mcuStatus !== 0) {
-                    // The TPIC2810 read is documented only by the SDK example (i2c_led_read_write_lld); no datasheet was read.
-                    notes.push(`P3[${i}]: MCU readback failed (status ${e.mcuStatus}): visual only`);
-                } else if (e.value !== want[i]) {
-                    reasons.push(`P3[${i}]: readback 0x${e.value.toString(16)}, wrote 0x${want[i].toString(16)}`);
-                }
+                if (e.pruResp !== R.ACK) reasons.push(`P3[${i}]: PRU write [0x11,pattern] response 0x${e.pruResp.toString(16)}`);
+                if (e.mcuStatus !== 0) reasons.push(`P3[${i}]: MCU readback failed (status ${e.mcuStatus})`);
+                else if (e.value !== want[i]) reasons.push(`P3[${i}]: readback 0x${e.value.toString(16)}, wrote 0x${want[i].toString(16)}`);
+                if (e.loadResp !== R.ACK) reasons.push(`P3[${i}]: PRU load [0x22] response 0x${e.loadResp.toString(16)}`);
             });
+            break;
+        }
+        case 6: { // C3: MCU only. Control (0x11 write, read, 0x22) gated; the 0x44 readback is recorded only.
+            const c = d.c3;
+            if (c.n !== 8) reasons.push(`C3: ${c.n} steps completed, want 8`);
+            if (c.wr1 !== 0) reasons.push(`C3: write [0x11,0x5A] status ${c.wr1}`);
+            if (c.rd1 !== 0) reasons.push(`C3: control read status ${c.rd1}`);
+            else if (c.rd1Val !== 0x5a) reasons.push(`C3: control readback 0x${c.rd1Val.toString(16)}, wrote 0x5a: the readback method is not proven`);
+            if (c.ld1 !== 0) reasons.push(`C3: load [0x22] status ${c.ld1}`);
+            if (c.off !== 0) reasons.push(`C3: LEDs-off sequence status ${c.off}`);
+            notes.push(`C3 0x44 readback (not gated): write status ${c.wr2}, read status ${c.rd2}, value 0x${c.rd2Val.toString(16)}`);
             break;
         }
         case 5: { // P4
@@ -236,12 +255,14 @@ export function judgeArm(armId, d, ctx, L = loadLayout()) {
 }
 
 // ---- the plan ----------------------------------------------------------------------------------
-// R0 once (the baseline that proves the bus), then P1-P4 at 100 kHz, then P1-P4 at 400 kHz.
+// R0 once (the baseline that proves the bus), then P1-P4 at 100 kHz with the MCU-only control C3 just before P3
+// (it proves the TPIC2810 readback method), then P1-P4 at 400 kHz.
 export function armPlan(L = loadLayout()) {
     const plan = [{ name: "R0", arm: L.RND91_ARM_R0, hz: 100000 }];
     for (const hz of [100000, 400000]) {
-        for (const [name, arm] of [["P1", L.RND91_ARM_P1], ["P2", L.RND91_ARM_P2], ["P3", L.RND91_ARM_P3], ["P4", L.RND91_ARM_P4]]) {
-            plan.push({ name: `${name}@${hz / 1000}k`, arm, hz });
+        for (const [name, arm] of [["P1", L.RND91_ARM_P1], ["P2", L.RND91_ARM_P2], ["C3", L.RND91_ARM_C3], ["P3", L.RND91_ARM_P3], ["P4", L.RND91_ARM_P4]]) {
+            if (name === "C3" && hz !== 100000) continue;
+            plan.push({ name: name === "C3" ? name : `${name}@${hz / 1000}k`, arm, hz });
         }
     }
     return plan;

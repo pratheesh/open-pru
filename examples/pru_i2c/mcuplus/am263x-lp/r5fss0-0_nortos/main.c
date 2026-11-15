@@ -222,6 +222,18 @@ static int32_t App_mcuRead(void *ctx, uint8_t addr7, uint8_t *data, uint32_t len
     return (I2C_transfer(gI2cHandle[CONFIG_I2C0], &txn) == SystemP_SUCCESS) ? 0 : -1;
 }
 
+static int32_t App_mcuWrite(void *ctx, uint8_t addr7, const uint8_t *data, uint32_t len)
+{
+    I2C_Transaction txn;
+
+    (void)ctx;
+    I2C_Transaction_init(&txn);
+    txn.writeBuf = (void *)data;
+    txn.writeCount = len;
+    txn.targetAddress = addr7;
+    return (I2C_transfer(gI2cHandle[CONFIG_I2C0], &txn) == SystemP_SUCCESS) ? 0 : -1;
+}
+
 /* The SDK i2c_memory_read geometry: 2-byte memory address */
 static int32_t App_mcuMemRead(void *ctx, uint8_t addr7, uint16_t memAddr, uint8_t *data, uint32_t len)
 {
@@ -249,7 +261,7 @@ static void App_sleepUs(void *ctx, uint32_t us)
 
 static const Rnd91_Hal gHal = {
     App_pruStart, App_pruStopRelease, App_pruWrite, App_pruRead,
-    App_mcuOpen, App_mcuClose, App_mcuRead, App_mcuMemRead, App_sleepUs,
+    App_mcuOpen, App_mcuClose, App_mcuRead, App_mcuWrite, App_mcuMemRead, App_sleepUs,
 };
 
 /* ========================================================================== */

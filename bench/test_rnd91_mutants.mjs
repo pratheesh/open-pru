@@ -35,6 +35,12 @@ const MUTANTS = [
     { id: "M10 R5F reads the MCU driver open before the PRU stop is checked", file: "header",
       from: "    err = Rnd91_guardPruStopped(&r->guard, ctrl, outc);\n    return (err == RND91_ERR_NONE) ? err : Rnd91_fail(r, err);",
       to: "    err = Rnd91_guardPruStopped(&r->guard, 0U, RND91_PIN_MASK);\n    return (err == RND91_ERR_NONE) ? err : Rnd91_fail(r, err);" },
+    { id: "M11 P3 reverts to 0x44 then read", file: "header",
+      from: "tx[0] = RND91_TPIC_CMD_SHIFT;", to: "tx[0] = RND91_TPIC_CMD_WR_NOW;" },
+    { id: "M12 P3 skips the 0x22 load", file: "header",
+      from: "(void)r->hal->pruWrite(r->ctx, RND91_ADDR_TPIC2810, ld, 1U, &ldResp);", to: "(void)ld;" },
+    { id: "M13 C3 gates the 0x44 readback", file: "lib",
+      from: "notes.push(`C3 0x44 readback (not gated)", to: "if (c.rd2Val !== 0xa5) reasons.push(\"C3: 0x44 readback\"); notes.push(`C3 0x44 readback (not gated)" },
 ];
 
 function runSuite(root, header) {

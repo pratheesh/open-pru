@@ -52,6 +52,16 @@ if (have) {
             check(j.ok, `gate: nominal arm ${arm} @${k}k passes`, j.reasons.join("; "));
         }
     }
+    // C3 (MCU only, 100 kHz): control gated, the 0x44 readback recorded only
+    {
+        const d = decodeBlock(dump("nominal-6-100"), L);
+        const j = judgeArm(6, d, { arm: 6, hz: 100000, cookie: cookieOf(6), r0Data }, L);
+        check(j.ok, "gate: nominal C3 @100k passes", j.reasons.join("; "));
+        check(d.c3.rd1Val === 0x5a && d.c3.rd2Val === 0xff && j.notes.some((n) => /0xff/.test(n) && /not gated/.test(n)), "decoder: C3 control 0x5A, 0x44 readback 0xFF recorded as a note");
+        check(d.events.map((e) => e.code).join(",") === "1,2,6,7,8", "decoder: C3 events START, ARM_BEGIN, MCU_OPEN, MCU_CLOSE, ARM_END (no PRU)");
+        const p3 = decodeBlock(dump("nominal-4-100"), L);
+        check(p3.stops.length === 6 && p3.p3.every((e) => e.loadResp === L.COMMAND_SUCCESS && e.mcuStatus === 0), "decoder: P3 has six recorded stops and an ACKed load per pattern");
+    }
     const t100 = decodeBlock(dump("nominal-2-100"), L).timing, t400 = decodeBlock(dump("nominal-2-400"), L).timing;
     check(t100.iepInc === 2500 && t100.tickClks === 500 && t100.sclTmoTicks === 10000 && t100.sclHz === 100000 && t100.freqSel === 3, "decoder: 100 kHz timing words 2500/500/10000/100000, selector 3");
     check(t400.iepInc === 680 && t400.tickClks === 136 && t400.sclTmoTicks === 36764 && t400.sclHz === 367647 && t400.freqSel === 2, "decoder: 400 kHz timing words 680/136/36764/367647, selector 2");
@@ -103,8 +113,19 @@ if (have) {
     check(!judgeBuf(3, patch("nominal-3-100", (b) => { b[L.RND91_OFF_P2_DATA] ^= 1; })).ok, "gate: P2 data differing from R0 FAILS");
     check(!judgeBuf(3, dump("nominal-3-100"), { r0Data: null }).ok, "gate: P2 without R0 data FAILS");
     check(!judgeBuf(4, patch("nominal-4-100", (b) => w32(b, L.RND91_OFF_P3 + 12, 0x54))).ok, "gate: P3 readback differing from the pattern FAILS");
-    const visual = judgeBuf(4, patch("nominal-4-100", (b) => w32(b, L.RND91_OFF_P3 + 8, 0xffffffff)));
-    check(visual.ok && visual.notes.some((n) => /visual only/.test(n)), "gate: P3 readback NACK is 'visual only', not a failure");
+    check(!judgeBuf(4, patch("nominal-4-100", (b) => w32(b, L.RND91_OFF_P3 + 12, 0xff))).ok, "gate: P3 readback 0xFF (the silicon symptom) FAILS");
+    check(!judgeBuf(4, patch("nominal-4-100", (b) => w32(b, L.RND91_OFF_P3 + 8, 0xffffffff))).ok, "gate: P3 MCU readback status -1 FAILS (the readback is gated)");
+    check(!judgeBuf(4, patch("nominal-4-100", (b) => w32(b, L.RND91_OFF_P3_LOAD + 4, 0))).ok, "gate: P3 without the [0x22] load response FAILS");
+    check(!judgeBuf(4, patch("nominal-4-100", (b) => w32(b, L.RND91_OFF_P3_LOAD + 8, L.ADDRESS_ACKNOWLDEGE_FAILED))).ok, "gate: P3 with a NACKed load FAILS");
+    check(!judgeBuf(4, patch("nominal-4-100", (b) => w32(b, L.RND91_OFF_P3 + 4, L.ADDRESS_ACKNOWLDEGE_FAILED))).ok, "gate: P3 with a NACKed [0x11,p] write FAILS");
+    check(!judgeBuf(4, patch("nominal-4-100", (b) => w32(b, L.RND91_OFF_STOP_X_OUTCTRL + 4, 0))).ok, "gate: P3 phase-2 stop with the lines still driven FAILS");
+    check(!judgeBuf(4, patch("nominal-4-100", (b) => w32(b, L.RND91_OFF_STOP_N, 9))).ok, "gate: more PRU stops than were recorded FAILS");
+    // C3
+    check(!judgeBuf(6, patch("nominal-6-100", (b) => w32(b, L.RND91_OFF_C3_RD1_VAL, 0xff))).ok, "gate: C3 control readback != 0x5A FAILS");
+    check(!judgeBuf(6, patch("nominal-6-100", (b) => w32(b, L.RND91_OFF_C3_RD1, 0xffffffff))).ok, "gate: C3 control read status -1 FAILS");
+    check(!judgeBuf(6, patch("nominal-6-100", (b) => w32(b, L.RND91_OFF_C3_OFF, 0xffffffff))).ok, "gate: C3 LEDs-off failure FAILS");
+    check(judgeBuf(6, patch("nominal-6-100", (b) => { w32(b, L.RND91_OFF_C3_RD2_VAL, 0x00); w32(b, L.RND91_OFF_C3_RD2, 0xffffffff); })).ok, "gate: C3 0x44 readback of any value or status is only recorded");
+    check(!judgeBuf(6, patch("nominal-6-100", (b) => w32(b, L.RND91_OFF_C3_N, 4))).ok, "gate: C3 that did not finish its steps FAILS");
     check(!judgeBuf(5, patch("nominal-5-100", (b) => { b[L.RND91_OFF_P4_RB2] ^= 1; })).ok, "gate: P4 readback 2 differing from the original FAILS");
     check(!judgeBuf(5, patch("nominal-5-100", (b) => { b[L.RND91_OFF_P4_RB1] ^= 1; })).ok, "gate: P4 readback 1 differing from the written bytes FAILS");
     check(!judgeBuf(5, patch("nominal-5-100", (b) => { for (let i = 0; i < 8; i++) b[L.RND91_OFF_P4_NEW + i] = b[L.RND91_OFF_P4_ORIG + i]; })).ok, "gate: P4 writing the original bytes (proves nothing) FAILS");
@@ -112,7 +133,7 @@ if (have) {
 
     // ---- plan runner: order, stop at first failure -----------------------------------------------------
     const plan = armPlan(L);
-    check(plan.map((s) => s.name).join(",") === "R0,P1@100k,P2@100k,P3@100k,P4@100k,P1@400k,P2@400k,P3@400k,P4@400k", "plan: R0, P1-P4 at 100k, then P1-P4 at 400k");
+    check(plan.map((s) => s.name).join(",") === "R0,P1@100k,P2@100k,C3,P3@100k,P4@100k,P1@400k,P2@400k,P3@400k,P4@400k", "plan: R0, P1, P2, C3, P3, P4 at 100k, then P1-P4 at 400k");
     const runnerFor = (mod) => { const calls = []; return { calls, run: async (step, cookie) => {
         calls.push(step.name);
         const k = step.hz / 1000;
@@ -123,7 +144,7 @@ if (have) {
     } }; };
     const allOk = runnerFor(null);
     const rAll = await runPlan(allOk.run, { L });
-    check(rAll.ok && rAll.results.every((x) => x.status === "PASS") && allOk.calls.length === 9, "plan: all nine arms pass on nominal blocks, run in order");
+    check(rAll.ok && rAll.results.every((x) => x.status === "PASS") && allOk.calls.length === 10, "plan: all ten arms pass on nominal blocks, run in order");
     const failP1 = runnerFor((step, b) => { if (step.name === "P1@100k") w32(b, L.RND91_OFF_PROBE, (0x61 << 16) | L.ADDRESS_ACKNOWLDEGE_FAILED); });
     const rP1 = await runPlan(failP1.run, { L });
     check(!rP1.ok && rP1.results[1].status === "FAIL" && rP1.results.slice(2).every((x) => x.status === "NOT_RUN") && failP1.calls.length === 2,
@@ -131,6 +152,9 @@ if (have) {
     const failR0 = runnerFor((step, b) => { if (step.name === "R0") w32(b, L.RND91_OFF_R0_STATUS, 5); });
     const rR0 = await runPlan(failR0.run, { L });
     check(!rR0.ok && rR0.results[0].status === "FAIL" && failR0.calls.length === 1, "plan: a failed R0 baseline stops everything");
+    const failC3 = runnerFor((step, b) => { if (step.name === "C3") w32(b, L.RND91_OFF_C3_RD1_VAL, 0xff); });
+    const rC3 = await runPlan(failC3.run, { L });
+    check(!rC3.ok && rC3.results[3].status === "FAIL" && failC3.calls.join(",") === "R0,P1@100k,P2@100k,C3" && rC3.results[4].status === "NOT_RUN", "plan: a failed C3 control stops the run before P3");
     const thrower = await runPlan(async () => { throw new Error("worker died"); }, { L });
     check(!thrower.ok && thrower.results[0].status === "ERROR" && thrower.results[1].status === "NOT_RUN", "plan: a runner error is ERROR and stops the run");
 }

@@ -69,6 +69,10 @@
 #define RND91_OFF_STOP_CTRL         (0x0C8U)        /* RND91_STOP_MAX words */
 #define RND91_OFF_STOP_OUTCTRL      (0x0D8U)        /* RND91_STOP_MAX words */
 #define RND91_STOP_MAX              (4U)
+/* stops 4..7 (P3 has two PRU phases per pattern, six stops): same pair of words, in the free space after P4 */
+#define RND91_OFF_STOP_X_CTRL       (0x240U)        /* RND91_STOP_X_MAX words */
+#define RND91_OFF_STOP_X_OUTCTRL    (0x250U)        /* RND91_STOP_X_MAX words */
+#define RND91_STOP_X_MAX            (4U)
 /* R0: MCU read of 16 bytes at 0x53:0x0400 */
 #define RND91_OFF_R0_STATUS         (0x100U)        /* SystemP status (0 = ok) */
 #define RND91_OFF_R0_DATA           (0x104U)        /* 16 bytes */
@@ -79,7 +83,8 @@
 /* P2: PRU read of 16 bytes at 0x53:0x0400 */
 #define RND91_OFF_P2_RESP           (0x150U)        /* PRU response of the data read */
 #define RND91_OFF_P2_DATA           (0x154U)        /* 16 bytes */
-/* P3: three entries of 4 words {pattern, PRU response, MCU status, MCU value} */
+/* P3: three entries of 4 words {pattern, PRU response of the [0x11,pattern] write, MCU status, MCU value}.
+ * The PRU response of the [0x22] load write of entry i is RND91_OFF_P3_LOAD + 4 * i. */
 #define RND91_OFF_P3_N              (0x170U)
 #define RND91_OFF_P3                (0x174U)
 #define RND91_P3_MAX                (3U)
@@ -97,6 +102,17 @@
 #define RND91_OFF_P4_FLAGS          (0x1E4U)        /* RND91_P4_F_* */
 #define RND91_P4_F_WRITE_ISSUED     (0x1U)          /* a write to the EEPROM was started */
 #define RND91_P4_F_RESTORE_ISSUED   (0x2U)          /* the restore was started */
+#define RND91_OFF_P3_LOAD           (0x230U)        /* RND91_P3_MAX words */
+/* C3: MCU-only TPIC2810 control. Every word is a SystemP status (0 = ok) unless noted. */
+#define RND91_OFF_C3_N              (0x200U)        /* steps completed, 0..8 */
+#define RND91_OFF_C3_WR1            (0x204U)        /* write [0x11, 0x5A] */
+#define RND91_OFF_C3_RD1            (0x208U)        /* read 1 byte */
+#define RND91_OFF_C3_RD1_VAL        (0x20CU)        /* the byte, gated == 0x5A */
+#define RND91_OFF_C3_LD1            (0x210U)        /* write [0x22] */
+#define RND91_OFF_C3_WR2            (0x214U)        /* write [0x44, 0xA5] */
+#define RND91_OFF_C3_RD2            (0x218U)        /* read 1 byte */
+#define RND91_OFF_C3_RD2_VAL        (0x21CU)        /* the byte after 0x44: recorded only, never gated */
+#define RND91_OFF_C3_OFF            (0x220U)        /* end: write [0x11,0x00] then [0x22]; first nonzero status */
 #define RND91_OFF_CANARY            (0x3FCU)
 
 #define RND91_STATE_CLEARED         (0U)
@@ -113,6 +129,7 @@
 #define RND91_ARM_P2                (3U)
 #define RND91_ARM_P3                (4U)
 #define RND91_ARM_P4                (5U)
+#define RND91_ARM_C3                (6U)        /* MCU-only TPIC2810 readback control, runs before P3 */
 
 #define RND91_ERR_NONE              (0U)
 #define RND91_ERR_BAD_REQUEST       (1U)    /* request magic, arm or frequency not valid */
@@ -142,6 +159,10 @@
 #define RND91_EEPROM_WRITE_MIN      (0x0400U)
 #define RND91_EEPROM_WRITE_CYCLE_US (10000U)
 #define RND91_TPIC_CMD_WR_NOW       (0x44U) /* write shift register and load the outputs */
+#define RND91_TPIC_CMD_SHIFT        (0x11U) /* write the shift register (SDK i2c_led_read_write_lld) */
+#define RND91_TPIC_CMD_LOAD         (0x22U) /* load the outputs from the shift register */
+#define RND91_C3_PATTERN_CTRL       (0x5AU) /* C3 control pattern, gated on readback */
+#define RND91_C3_PATTERN_DOC        (0xA5U) /* C3 0x44 pattern, readback recorded only */
 
 /* ========================================================================== */
 /*                                  Pins                                      */
@@ -364,6 +385,11 @@ static inline uint32_t Rnd91_guardPruStopped(Rnd91_Guard *g, uint32_t ctrlReg, u
         Rnd91_w32(g->blk, RND91_OFF_STOP_CTRL + (4U * n), ctrlReg);
         Rnd91_w32(g->blk, RND91_OFF_STOP_OUTCTRL + (4U * n), outCtrl);
     }
+    else if (n < (RND91_STOP_MAX + RND91_STOP_X_MAX))
+    {
+        Rnd91_w32(g->blk, RND91_OFF_STOP_X_CTRL + (4U * (n - RND91_STOP_MAX)), ctrlReg);
+        Rnd91_w32(g->blk, RND91_OFF_STOP_X_OUTCTRL + (4U * (n - RND91_STOP_MAX)), outCtrl);
+    }
     Rnd91_w32(g->blk, RND91_OFF_STOP_N, n + 1U);
     Rnd91_event(g->blk, RND91_EV_PRU_STOPPED, ctrlReg);
     if (!Rnd91_linesReleased(ctrlReg, outCtrl))
@@ -412,6 +438,7 @@ typedef struct
     int32_t (*mcuOpen)(void *ctx);
     void    (*mcuClose)(void *ctx);
     int32_t (*mcuRead)(void *ctx, uint8_t addr7, uint8_t *data, uint32_t len);
+    int32_t (*mcuWrite)(void *ctx, uint8_t addr7, const uint8_t *data, uint32_t len);
     int32_t (*mcuMemRead)(void *ctx, uint8_t addr7, uint16_t memAddr, uint8_t *data, uint32_t len);
     void    (*sleepUs)(void *ctx, uint32_t us);
 } Rnd91_Hal;
@@ -572,8 +599,9 @@ static inline uint32_t Rnd91_armP2(Rnd91_Run *r)
     return (err != RND91_ERR_NONE) ? err : endErr;
 }
 
-/* P3: for each pattern one PRU phase writes it, then the MCU reads the TPIC2810
- * shift register back. */
+/* P3: for each pattern, the SDK i2c_led_read_write_lld sequence with the PRU as the
+ * writer: a PRU phase writes [0x11, pattern], the MCU reads the TPIC2810 shift
+ * register back (gated == pattern), a second PRU phase writes [0x22] (load). */
 static inline uint32_t Rnd91_armP3(Rnd91_Run *r)
 {
     static const uint8_t patterns[RND91_P3_MAX] = {0x55U, 0xAAU, 0x00U};
@@ -585,13 +613,16 @@ static inline uint32_t Rnd91_armP3(Rnd91_Run *r)
     {
         uint32_t e = RND91_OFF_P3 + (RND91_P3_STRIDE * i);
         uint8_t tx[2];
+        uint8_t ld[1];
         uint8_t rb = 0U;
         uint16_t resp = 0U;
+        uint16_t ldResp = 0U;
         int32_t st;
         uint32_t endErr;
 
-        tx[0] = RND91_TPIC_CMD_WR_NOW;
+        tx[0] = RND91_TPIC_CMD_SHIFT;
         tx[1] = patterns[i];
+        ld[0] = RND91_TPIC_CMD_LOAD;
         err = Rnd91_pruBegin(r);
         if (err == RND91_ERR_NONE)
         {
@@ -615,8 +646,79 @@ static inline uint32_t Rnd91_armP3(Rnd91_Run *r)
         Rnd91_w32(r->blk, e + 8U, (uint32_t)st);
         Rnd91_w32(r->blk, e + 12U, rb);
         Rnd91_w32(r->blk, RND91_OFF_P3_N, i + 1U);
+
+        /* second PRU phase: load the outputs (the MCU driver is closed again) */
+        err = Rnd91_pruBegin(r);
+        if (err == RND91_ERR_NONE)
+        {
+            (void)r->hal->pruWrite(r->ctx, RND91_ADDR_TPIC2810, ld, 1U, &ldResp);
+        }
+        endErr = Rnd91_pruEnd(r);
+        if (err == RND91_ERR_NONE)
+        {
+            err = endErr;
+        }
+        Rnd91_w32(r->blk, RND91_OFF_P3_LOAD + (4U * i), ldResp);
     }
     return err;
+}
+
+/* C3: MCU only, one driver open. The control that proves the readback method
+ * (SDK sequence, read == 0x5A), then the 0x44 readback recorded and not gated,
+ * then the LEDs off. The off sequence is always attempted. */
+static inline uint32_t Rnd91_armC3(Rnd91_Run *r)
+{
+    const Rnd91_Hal *h = r->hal;
+    uint8_t shift[2];
+    uint8_t load[1];
+    uint8_t rb = 0U;
+    int32_t st;
+    int32_t bad;
+    int32_t off;
+    uint32_t err = Rnd91_mcuBegin(r);
+
+    if (err != RND91_ERR_NONE)
+    {
+        return err;
+    }
+    load[0] = RND91_TPIC_CMD_LOAD;
+    shift[0] = RND91_TPIC_CMD_SHIFT;
+    shift[1] = RND91_C3_PATTERN_CTRL;
+    st = h->mcuWrite(r->ctx, RND91_ADDR_TPIC2810, shift, 2U);
+    bad = st;
+    Rnd91_w32(r->blk, RND91_OFF_C3_WR1, (uint32_t)st);
+    st = h->mcuRead(r->ctx, RND91_ADDR_TPIC2810, &rb, 1U);
+    bad |= st;
+    Rnd91_w32(r->blk, RND91_OFF_C3_RD1, (uint32_t)st);
+    Rnd91_w32(r->blk, RND91_OFF_C3_RD1_VAL, rb);
+    st = h->mcuWrite(r->ctx, RND91_ADDR_TPIC2810, load, 1U);
+    bad |= st;
+    Rnd91_w32(r->blk, RND91_OFF_C3_LD1, (uint32_t)st);
+    Rnd91_w32(r->blk, RND91_OFF_C3_N, 4U);
+
+    /* documents the 0x44 readback seen on silicon: nothing here is gated */
+    shift[0] = RND91_TPIC_CMD_WR_NOW;
+    shift[1] = RND91_C3_PATTERN_DOC;
+    rb = 0U;
+    st = h->mcuWrite(r->ctx, RND91_ADDR_TPIC2810, shift, 2U);
+    Rnd91_w32(r->blk, RND91_OFF_C3_WR2, (uint32_t)st);
+    st = h->mcuRead(r->ctx, RND91_ADDR_TPIC2810, &rb, 1U);
+    Rnd91_w32(r->blk, RND91_OFF_C3_RD2, (uint32_t)st);
+    Rnd91_w32(r->blk, RND91_OFF_C3_RD2_VAL, rb);
+    Rnd91_w32(r->blk, RND91_OFF_C3_N, 7U);
+
+    shift[0] = RND91_TPIC_CMD_SHIFT;
+    shift[1] = 0x00U;
+    off = h->mcuWrite(r->ctx, RND91_ADDR_TPIC2810, shift, 2U);
+    st = h->mcuWrite(r->ctx, RND91_ADDR_TPIC2810, load, 1U);
+    if (off == 0)
+    {
+        off = st;
+    }
+    Rnd91_w32(r->blk, RND91_OFF_C3_OFF, (uint32_t)off);
+    Rnd91_w32(r->blk, RND91_OFF_C3_N, 8U);
+    Rnd91_mcuEnd(r);
+    return ((bad | off) == 0) ? RND91_ERR_NONE : Rnd91_fail(r, RND91_ERR_MCU_XFER);
 }
 
 /* P4: save, write, MCU readback, restore, MCU readback. The write is never
@@ -743,7 +845,7 @@ static inline uint32_t Rnd91_runRequested(Rnd91_Run *r, uint32_t iepClkHz)
     Rnd91_event(b, RND91_EV_START, 0U);
 
     if ((Rnd91_r32(b, RND91_OFF_REQ_MAGIC) != RND91_REQ_MAGIC) || (arm < RND91_ARM_R0) ||
-        (arm > RND91_ARM_P4) || (Rnd91_freqSel(hz) == 0U))
+        (arm > RND91_ARM_C3) || (Rnd91_freqSel(hz) == 0U))
     {
         err = Rnd91_fail(r, RND91_ERR_BAD_REQUEST);
     }
@@ -762,7 +864,8 @@ static inline uint32_t Rnd91_runRequested(Rnd91_Run *r, uint32_t iepClkHz)
             case RND91_ARM_P1: err = Rnd91_armP1(r); break;
             case RND91_ARM_P2: err = Rnd91_armP2(r); break;
             case RND91_ARM_P3: err = Rnd91_armP3(r); break;
-            default:           err = Rnd91_armP4(r); break;
+            case RND91_ARM_P4: err = Rnd91_armP4(r); break;
+            default:           err = Rnd91_armC3(r); break;
         }
     }
     Rnd91_event(b, RND91_EV_ARM_END, err);
