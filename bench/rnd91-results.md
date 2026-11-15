@@ -1,3 +1,5 @@
+**Branch note:** the silicon results below were measured on firmware at 8aac84c1 plus the AM263x port. This branch (rnd91-am263-i2c-pr172) re-targets PR #172 head 8f4c1c2c (one IRQ flag byte per instance), which is not yet run on silicon.
+
 # RND-91 results: PRU I2C master on LP-AM263, silicon (2026-11-15)
 
 **Verdict: PASS.** All ten arms passed on silicon (read-only and write, at 100 kHz and 367.6 kHz). The PRU1 I2C

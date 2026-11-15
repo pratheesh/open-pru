@@ -189,7 +189,7 @@ int main(int argc, char **argv)
     {
         static uint8_t d0[0x2000], d1[0x2000];
         memset(d0, 0, sizeof(d0)); memset(d1, 0, sizeof(d1));
-        d0[0x08] = 0xFF; d0[0x09] = 0xFF;                               /* the other core's IRQ bits must survive */
+        d0[0x08] = 0xFF; d0[0x09] = 0xFF;                               /* both cores' flag bytes set; the other core's must survive */
         Rnd91_fillPruConfig(d0, d1, 3U, 2500U, 10000U);
         CHECK(d1[0x100 + 0xD8] == 7U, "config: SCL pin byte (instance+0xD8) = 7");
         CHECK(d1[0x100 + 0xD9] == 17U, "config: SDA pin byte (instance+0xD9) = 17");
@@ -197,7 +197,23 @@ int main(int argc, char **argv)
         CHECK(*(uint16_t *)(d0 + 0x0C) == 3U && *(uint16_t *)(d0 + 0x0E) == 2500U, "config: freq word 3, IEP increment 2500");
         CHECK(*(uint16_t *)(d1 + 0x100 + 0xE8) == 10000U, "config: SCL timeout ticks");
         CHECK(*(uint32_t *)(d1 + 0x100 + 0xA4) == 0x8413U, "config: CON 0x8413 (enable, master, start, stop, NACK last)");
-        CHECK(*(uint16_t *)(d0 + 0x08) == 0xFFFDU, "config: only this instance's IRQ bit (bit 1) cleared");
+        CHECK(d0[0x09] == 0U, "config: this instance's IRQ flag byte (0x08 + 1) written 0");
+        CHECK(d0[0x08] == 0xFFU, "config: the other core's IRQ flag byte (0x08) untouched");
+        /* byte protocol helpers: PRU raises by storing 1 in its own byte, host acks by writing 0 there */
+        d0[0x08] = 0U; d0[0x09] = 0U;
+        CHECK(!Rnd91_irqPending(d0), "irq: nothing pending when both bytes are 0");
+        d0[0x08] = 1U;
+        CHECK(!Rnd91_irqPending(d0), "irq: the other core's flag byte does not count as ours");
+        d0[0x09] = 1U;
+        CHECK(Rnd91_irqPending(d0), "irq: PRU1 byte store of 1 is seen as pending");
+        d0[0x08] = 0xAAU;
+        Rnd91_irqAck(d0);
+        CHECK(d0[0x09] == 0U && d0[0x08] == 0xAAU && !Rnd91_irqPending(d0), "irq: ack writes 0 to our byte only");
+        d0[0x08] = 0U; d0[0x09] = 0U; d0[0x0A] = 0x5AU;
+        d0[0x09] = 2U;
+        CHECK(Rnd91_irqPending(d0), "irq: any nonzero byte is pending (value 2, not just bit 0)");
+        Rnd91_irqAck(d0);
+        CHECK(d0[0x0A] == 0x5AU, "irq: ack leaves neighbouring bytes alone");
     }
 
     /* 4. nominal runs of every arm at both rates */

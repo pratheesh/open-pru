@@ -1,5 +1,7 @@
 # PRU I2C on the LP-AM263: PRU1 bench (RND-91)
 
+Re-target: the silicon results in this document were measured on firmware at 8aac84c1 plus the AM263x port (16-bit IRQ word, bit per instance). This branch (rnd91-am263-i2c-pr172) re-targets PR #172 head 8f4c1c2c (one IRQ flag byte per instance: PRU stores 1, host writes 0), which is not yet run on silicon. The R5F app now uses the byte protocol.
+
 Status: the first silicon run (rnd91-b1-20261115-1547) is recorded in "First silicon result" below; everything the
 text does not mark as run on silicon is still desk work. The PRU firmware and the R5F app were built (clpru 2.3.3,
 tiarmclang 4.0.4, SysConfig 1.28, MCU+ SDK AM263x 26.01.00.08) and the logic was tested on the host against a fake

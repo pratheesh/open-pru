@@ -86,7 +86,7 @@ static int32_t App_pruSend(uint16_t command, uint16_t *resp)
     __sync_synchronize();
     HW_WR_REG16(gDmem1 + ICSS_I2C_INSTANCE0_ADDR + ICSS_I2C_COMMAND_OFFSET + 2U, command);
     start = ClockP_getTimeUsec();
-    while ((HW_RD_REG16(gDmem0 + IRQ_COMMON_REGISTER_OFFSET) & (1U << RND91_PRU_CORE)) == 0U)
+    while (!Rnd91_irqPending(gDmem0))
     {
         if ((ClockP_getTimeUsec() - start) > RND91_PRU_TIMEOUT_US)
         {
@@ -96,8 +96,7 @@ static int32_t App_pruSend(uint16_t command, uint16_t *resp)
         }
     }
     *resp = HW_RD_REG16(gDmem1 + ICSS_I2C_INSTANCE0_ADDR + ICSS_I2C_COMMAND_OFFSET);
-    HW_WR_REG16(gDmem0 + IRQ_COMMON_REGISTER_OFFSET,
-                (uint16_t)(HW_RD_REG16(gDmem0 + IRQ_COMMON_REGISTER_OFFSET) & ~(1U << RND91_PRU_CORE)));
+    Rnd91_irqAck(gDmem0);
     return (*resp == COMMAND_SUCCESS) ? SystemP_SUCCESS : SystemP_FAILURE;
 }
 

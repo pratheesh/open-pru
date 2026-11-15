@@ -254,6 +254,11 @@ static inline void Rnd91_w8(volatile uint8_t *base, uint32_t off, uint8_t v)
     *(volatile uint8_t *)(base + off) = v;
 }
 
+static inline uint8_t Rnd91_r8(volatile uint8_t *base, uint32_t off)
+{
+    return *(volatile uint8_t *)(base + off);
+}
+
 static inline void Rnd91_w16(volatile uint8_t *base, uint32_t off, uint16_t v)
 {
     *(volatile uint16_t *)(base + off) = v;
@@ -284,6 +289,18 @@ static inline void Rnd91_putBytes(volatile uint8_t *base, uint32_t off, const ui
     }
 }
 
+/* PRU response flag: one byte per instance at IRQ_COMMON_REGISTER_OFFSET + instance id. The PRU stores 1,
+ * the host writes 0. Never a read-modify-write of the 16-bit word. */
+static inline uint8_t Rnd91_irqPending(volatile uint8_t *dmem0)
+{
+    return (uint8_t)(Rnd91_r8(dmem0, IRQ_COMMON_REGISTER_OFFSET + RND91_PRU_CORE) != 0U);
+}
+
+static inline void Rnd91_irqAck(volatile uint8_t *dmem0)
+{
+    Rnd91_w8(dmem0, IRQ_COMMON_REGISTER_OFFSET + RND91_PRU_CORE, 0U);
+}
+
 /* ========================================================================== */
 /*                         PRU configuration image                            */
 /* ========================================================================== */
@@ -296,15 +313,12 @@ static inline void Rnd91_fillPruConfig(volatile uint8_t *dmem0, volatile uint8_t
                                        uint32_t freqSel, uint32_t iepInc, uint32_t sclTmoTicks)
 {
     uint32_t con;
-    uint16_t irq;
 
     /* Frequency selector and IEP increment, shared words in DMEM0 */
     Rnd91_w16(dmem0, I2C_BUS_FREQUENCY_OFFSET, (uint16_t)freqSel);
     Rnd91_w16(dmem0, I2C_BUS_FREQUENCY_OFFSET + 2U, (uint16_t)iepInc);
-    /* clear only this instance's bit of the shared IRQ word */
-    irq = Rnd91_r16(dmem0, IRQ_COMMON_REGISTER_OFFSET);
-    irq = (uint16_t)(irq & ~(1U << RND91_PRU_CORE));
-    Rnd91_w16(dmem0, IRQ_COMMON_REGISTER_OFFSET, irq);
+    /* clear only this instance's IRQ flag byte (PR #172: one byte per instance, no read-modify-write) */
+    Rnd91_irqAck(dmem0);
 
     /* instance 0 block in the data RAM of the core that runs the firmware */
     Rnd91_w8(dmem1, ICSS_I2C_INSTANCE0_ADDR + ICSS_I2C_BUF_OFFSET, 0xFFU);

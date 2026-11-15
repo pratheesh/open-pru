@@ -41,6 +41,12 @@ const MUTANTS = [
       from: "(void)r->hal->pruWrite(r->ctx, RND91_ADDR_TPIC2810, ld, 1U, &ldResp);", to: "(void)ld;" },
     { id: "M13 C3 gates the 0x44 readback", file: "lib",
       from: "notes.push(`C3 0x44 readback (not gated)", to: "if (c.rd2Val !== 0xa5) reasons.push(\"C3: 0x44 readback\"); notes.push(`C3 0x44 readback (not gated)" },
+    { id: "M14 host still clears a bit of the 16-bit IRQ word on ack", file: "header",
+      from: "    Rnd91_w8(dmem0, IRQ_COMMON_REGISTER_OFFSET + RND91_PRU_CORE, 0U);",
+      to: "    Rnd91_w16(dmem0, IRQ_COMMON_REGISTER_OFFSET, (uint16_t)(Rnd91_r16(dmem0, IRQ_COMMON_REGISTER_OFFSET) & ~(1U << RND91_PRU_CORE)));" },
+    { id: "M15 host waits on the bit of the 16-bit IRQ word", file: "header",
+      from: "return (uint8_t)(Rnd91_r8(dmem0, IRQ_COMMON_REGISTER_OFFSET + RND91_PRU_CORE) != 0U);",
+      to: "return (uint8_t)((Rnd91_r16(dmem0, IRQ_COMMON_REGISTER_OFFSET) & (1U << RND91_PRU_CORE)) != 0U);" },
 ];
 
 function runSuite(root, header) {
