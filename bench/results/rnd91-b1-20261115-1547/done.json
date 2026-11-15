@@ -1,0 +1,129 @@
+{
+  "tag": "rnd91-b1-20261115-1547",
+  "board": "am263",
+  "startedAt": "2026-11-15T10:18:11.767Z",
+  "images": {
+    "r5f": "64bb9fa1929e0ed28e7a30c50fde1a67",
+    "pru1": "31bd4735b334f34e53bce4044438ec7d",
+    "pru1_load_bin_h": "5914087828ffe938eb40464b20d57528"
+  },
+  "status": "FAIL",
+  "arms": [
+    {
+      "name": "R0",
+      "status": "PASS",
+      "reasons": [],
+      "notes": [
+        "R0 data 000102030405060708090a0b0c0d0e0f"
+      ]
+    },
+    {
+      "name": "P1@100k",
+      "status": "PASS",
+      "reasons": [],
+      "notes": []
+    },
+    {
+      "name": "P2@100k",
+      "status": "PASS",
+      "reasons": [],
+      "notes": [
+        "P2 data 000102030405060708090a0b0c0d0e0f"
+      ]
+    },
+    {
+      "name": "P3@100k",
+      "status": "FAIL",
+      "reasons": [
+        "P3[0]: readback 0xff, wrote 0x55",
+        "P3[1]: readback 0xff, wrote 0xaa",
+        "P3[2]: readback 0xff, wrote 0x0"
+      ],
+      "notes": []
+    },
+    {
+      "name": "P4@100k",
+      "status": "NOT_RUN"
+    },
+    {
+      "name": "P1@400k",
+      "status": "NOT_RUN"
+    },
+    {
+      "name": "P2@400k",
+      "status": "NOT_RUN"
+    },
+    {
+      "name": "P3@400k",
+      "status": "NOT_RUN"
+    },
+    {
+      "name": "P4@400k",
+      "status": "NOT_RUN"
+    }
+  ],
+  "events": [
+    {
+      "at": "2026-11-15T10:18:21.290Z",
+      "msg": "jtag scan: ok (4 bits)"
+    },
+    {
+      "at": "2026-11-15T10:18:29.984Z",
+      "msg": "CCS worker connected"
+    },
+    {
+      "at": "2026-11-15T10:18:29.985Z",
+      "msg": "arm R0: requested (cookie 0x52000001)"
+    },
+    {
+      "at": "2026-11-15T10:18:31.808Z",
+      "msg": "arm P1@100k: requested (cookie 0x52000002)"
+    },
+    {
+      "at": "2026-11-15T10:18:33.447Z",
+      "msg": "arm P2@100k: requested (cookie 0x52000003)"
+    },
+    {
+      "at": "2026-11-15T10:18:35.072Z",
+      "msg": "arm P3@100k: requested (cookie 0x52000004)"
+    },
+    {
+      "at": "2026-11-15T10:18:37.105Z",
+      "msg": "arm R0: PASS"
+    },
+    {
+      "at": "2026-11-15T10:18:37.105Z",
+      "msg": "arm P1@100k: PASS"
+    },
+    {
+      "at": "2026-11-15T10:18:37.105Z",
+      "msg": "arm P2@100k: PASS"
+    },
+    {
+      "at": "2026-11-15T10:18:37.105Z",
+      "msg": "arm P3@100k: FAIL - P3[0]: readback 0xff, wrote 0x55; P3[1]: readback 0xff, wrote 0xaa; P3[2]: readback 0xff, wrote 0x0"
+    },
+    {
+      "at": "2026-11-15T10:18:37.105Z",
+      "msg": "arm P4@100k: NOT_RUN"
+    },
+    {
+      "at": "2026-11-15T10:18:37.105Z",
+      "msg": "arm P1@400k: NOT_RUN"
+    },
+    {
+      "at": "2026-11-15T10:18:37.105Z",
+      "msg": "arm P2@400k: NOT_RUN"
+    },
+    {
+      "at": "2026-11-15T10:18:37.105Z",
+      "msg": "arm P3@400k: NOT_RUN"
+    },
+    {
+      "at": "2026-11-15T10:18:37.105Z",
+      "msg": "arm P4@400k: NOT_RUN"
+    }
+  ],
+  "endedAt": "2026-11-15T10:18:37.105Z",
+  "runtimeS": 25
+}

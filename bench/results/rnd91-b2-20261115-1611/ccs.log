@@ -1,0 +1,218 @@
+GEL: Cortex_R5_0: GEL Output: ***OnTargetConnect() Launched***
+
+
+GEL: Cortex_R5_0: GEL Output: AM263x Initialization Scripts Launched. 
+Please Wait...
+
+
+
+GEL: Cortex_R5_0: GEL Output: AM263x_Cryst_Clock_Loss_Status() Launched
+
+GEL: Cortex_R5_0: GEL Output: Crystal Clock present 
+
+GEL: Cortex_R5_0: GEL Output: AM263x_SOP_Mode() Launched
+
+GEL: Cortex_R5_0: GEL Output: SOP MODE = 0x00000004    
+
+GEL: Cortex_R5_0: GEL Output: QSPI - 4S Fallback UART boot mode
+
+GEL: Cortex_R5_0: GEL Output: AM263x_Read_Device_Type() Launched
+
+GEL: Cortex_R5_0: GEL Output: EFuse Device Type Value = 0x000000AA    
+
+GEL: Cortex_R5_0: GEL Output: AM263x_Check_supported_mode() Launched
+
+GEL: Cortex_R5_0: GEL Output: The Device supports both LockStep & Dual Core mode 
+
+GEL: Cortex_R5_0: GEL Output: mode = 1 
+
+
+GEL: Cortex_R5_0: GEL Output: MSS_CTRL Control Registers Unlocked
+
+GEL: Cortex_R5_0: GEL Output: MSS_TOP_RCM Control Registers Unlocked
+
+GEL: Cortex_R5_0: GEL Output: MSS_RCM Control Registers Unlocked
+
+GEL: Cortex_R5_0: GEL Output: MSS_IOMUX Control Registers Unlocked
+
+GEL: Cortex_R5_0: GEL Output: TOP_CTRL Control Registers Unlocked
+
+GEL: Cortex_R5_0: GEL Output: *** R5FSS0 DualCore Reset ***
+
+GEL: Cortex_R5_0: GEL Output: *** R5FSS1 DualCore Reset ***
+
+GEL: Cortex_R5_0: GEL Output: R5F ROM Eclipse
+
+GEL: Cortex_R5_0: GEL Output: R5FSS0_0 Released
+
+GEL: Cortex_R5_0: GEL Output: R5FSS0_1 Released
+
+GEL: Cortex_R5_0: GEL Output: R5FSS1_0 Released
+
+GEL: Cortex_R5_0: GEL Output: R5FSS1_1 Released
+
+GEL: Cortex_R5_0: GEL Output: All R5F Cores Released for program load
+
+GEL: Cortex_R5_0: GEL Output: L2 Mem Init Complete
+
+GEL: Cortex_R5_0: GEL Output: MailBox Mem Init Complete
+
+GEL: Cortex_R5_0: GEL Output: *********** R5FSS0/1 Dual Core mode Configured********
+
+GEL: Cortex_R5_0: GEL Output: CORE PLL Configuration Complete
+
+GEL: Cortex_R5_0: GEL Output: SYS_CLK DIVBY2
+
+GEL: Cortex_R5_0: GEL Output: DPLL_CORE_HSDIV0_CLKOUT0 selected as CLK source for R5FSS & SYS CLKs
+
+GEL: Cortex_R5_0: GEL Output: CLK Programmed R5F=400MHz and SYS_CLK=200MHz 
+
+GEL: Cortex_R5_0: GEL Output: 
+
+ *** Enabling Peripheral Clocks *** 
+
+GEL: Cortex_R5_0: GEL Output: Enabling RTI[0:3] Clocks 
+
+GEL: Cortex_R5_0: GEL Output: RTI0 Clock Enabled (200MHz)
+
+GEL: Cortex_R5_0: GEL Output: RTI1 Clock Enabled (200MHz)
+
+GEL: Cortex_R5_0: GEL Output: RTI2 Clock Enabled (200MHz)
+
+GEL: Cortex_R5_0: GEL Output: RTI3 Clock Enabled (200MHz)
+
+GEL: Cortex_R5_0: GEL Output: Enabling RTI_WDT[0:3] Clocks 
+
+GEL: Cortex_R5_0: GEL Output: WDT0 Clock Enabled (200MHz)
+
+GEL: Cortex_R5_0: GEL Output: WDT1 Clock Enabled (200MHz)
+
+GEL: Cortex_R5_0: GEL Output: WDT2 Clock Enabled (200MHz)
+
+GEL: Cortex_R5_0: GEL Output: WDT3 Clock Enabled (200MHz)
+
+GEL: Cortex_R5_0: GEL Output: Enabling UART[0:5]/LIN[0:5] Clocks 
+
+GEL: Cortex_R5_0: GEL Output: LIN0_UART0 Clock Enabled (160MHz)
+
+GEL: Cortex_R5_0: GEL Output: LIN1_UART1 Clock Enabled (160MHz)
+
+GEL: Cortex_R5_0: GEL Output: LIN2_UART2 Clock Enabled (160MHz)
+
+GEL: Cortex_R5_0: GEL Output: LIN3_UART3 Clock Enabled (160MHz)
+
+GEL: Cortex_R5_0: GEL Output: LIN4_UART4 Clock Enabled (160MHz)
+
+GEL: Cortex_R5_0: GEL Output: LIN5_UART5 Clock Enabled (160MHz)
+
+GEL: Cortex_R5_0: GEL Output: Enabling QSPI Clocks 
+
+GEL: Cortex_R5_0: GEL Output: QSPI0 Clock Enabled (80MHz)
+
+GEL: Cortex_R5_0: GEL Output: Enabling I2C Clocks 
+
+GEL: Cortex_R5_0: GEL Output: I2C Clock Enabled (48MHz)
+
+GEL: Cortex_R5_0: GEL Output: Enabling TRACE Clocks 
+
+GEL: Cortex_R5_0: GEL Output: Trace Clock Enabled (250MHz)
+
+GEL: Cortex_R5_0: GEL Output: Enabling MCAN[0:3] Clocks 
+
+GEL: Cortex_R5_0: GEL Output: MCAN0 Clock Enabled (80MHz)
+
+GEL: Cortex_R5_0: GEL Output: MCAN1 Clock Enabled (80MHz)
+
+GEL: Cortex_R5_0: GEL Output: MCAN2 Clock Enabled (80MHz)
+
+GEL: Cortex_R5_0: GEL Output: MCAN3 Clock Enabled (80MHz)
+
+GEL: Cortex_R5_0: GEL Output: Enabling GPMC Clocks 
+
+GEL: Cortex_R5_0: GEL Output: GPMC Clock Enabled (100MHz)
+
+GEL: Cortex_R5_0: GEL Output: Enabling ELM Clocks 
+
+GEL: Cortex_R5_0: GEL Output: ELM Clock Enabled (50MHz)
+
+GEL: Cortex_R5_0: GEL Output: Enabling MMCSD Clocks 
+
+GEL: Cortex_R5_0: GEL Output: MMCSD Clock Enabled (48MHz)
+
+GEL: Cortex_R5_0: GEL Output: Enabling MCSPI[0:4] Clocks 
+
+GEL: Cortex_R5_0: GEL Output: MCSPI0 Clock Enabled (48MHz)
+
+GEL: Cortex_R5_0: GEL Output: MCSPI1 Clock Enabled (48MHz)
+
+GEL: Cortex_R5_0: GEL Output: MCSPI2 Clock Enabled (48MHz)
+
+GEL: Cortex_R5_0: GEL Output: MCSPI3 Clock Enabled (48MHz)
+
+GEL: Cortex_R5_0: GEL Output: MCSPI4 Clock Enabled (48MHz)
+
+GEL: Cortex_R5_0: GEL Output: Enabling CONTROLSS Clocks 
+
+GEL: Cortex_R5_0: GEL Output: CONTROLSS Clock Enabled (400MHz)
+
+GEL: Cortex_R5_0: GEL Output: Enabling CPTS Clocks 
+
+GEL: Cortex_R5_0: GEL Output: CPTS Clock Enabled (250MHz)
+
+GEL: Cortex_R5_0: GEL Output: Enabling RGMI[5,50,250] Clocks 
+
+GEL: Cortex_R5_0: GEL Output: RGMII5 Clock Enabled (5MHz)
+
+GEL: Cortex_R5_0: GEL Output: RGMII50 Clock Enabled (50MHz)
+
+GEL: Cortex_R5_0: GEL Output: RGMII250 Clock Enabled (250MHz)
+
+GEL: Cortex_R5_0: GEL Output: Enabling XTAL_TEMPSENSE_32K Clocks 
+
+GEL: Cortex_R5_0: GEL Output: TEMPSENSE Clock Enabled (32KHz)
+
+GEL: Cortex_R5_0: GEL Output: Enabling XTAL_MMC_32K Clocks 
+
+GEL: Cortex_R5_0: GEL Output: XTAL_MMC Clock Enabled (32KHz)
+
+GEL: Cortex_R5_0: GEL Output: 
+
+ ***All IP Clocks are Enabled*** 
+
+
+info: Cortex_R5_0: AM263x
+
+info: Cortex_R5_0: Board Selected : CC
+
+[am263-rnd91 +5.0s] connected Cortex_R5_0$
+[am263-rnd91 +5.7s] cmd 1: C:/t/rnd91-i2c263a/bench/images/rnd91_am263_r5f.out
+GEL: Cortex_R5_0: GEL Output: CPU reset (soft reset) has been issued through GEL on program load.
+
+[am263-rnd91 +7.4s] cmd 2: C:/t/rnd91-i2c263a/bench/images/rnd91_am263_r5f.out
+GEL: Cortex_R5_0: GEL Output: CPU reset (soft reset) has been issued through GEL on program load.
+
+[am263-rnd91 +9.0s] cmd 3: C:/t/rnd91-i2c263a/bench/images/rnd91_am263_r5f.out
+GEL: Cortex_R5_0: GEL Output: CPU reset (soft reset) has been issued through GEL on program load.
+
+[am263-rnd91 +10.6s] cmd 4: C:/t/rnd91-i2c263a/bench/images/rnd91_am263_r5f.out
+GEL: Cortex_R5_0: GEL Output: CPU reset (soft reset) has been issued through GEL on program load.
+
+[am263-rnd91 +12.3s] cmd 5: C:/t/rnd91-i2c263a/bench/images/rnd91_am263_r5f.out
+GEL: Cortex_R5_0: GEL Output: CPU reset (soft reset) has been issued through GEL on program load.
+
+[am263-rnd91 +14.5s] cmd 6: C:/t/rnd91-i2c263a/bench/images/rnd91_am263_r5f.out
+GEL: Cortex_R5_0: GEL Output: CPU reset (soft reset) has been issued through GEL on program load.
+
+[am263-rnd91 +16.6s] cmd 7: C:/t/rnd91-i2c263a/bench/images/rnd91_am263_r5f.out
+GEL: Cortex_R5_0: GEL Output: CPU reset (soft reset) has been issued through GEL on program load.
+
+[am263-rnd91 +18.3s] cmd 8: C:/t/rnd91-i2c263a/bench/images/rnd91_am263_r5f.out
+GEL: Cortex_R5_0: GEL Output: CPU reset (soft reset) has been issued through GEL on program load.
+
+[am263-rnd91 +19.8s] cmd 9: C:/t/rnd91-i2c263a/bench/images/rnd91_am263_r5f.out
+GEL: Cortex_R5_0: GEL Output: CPU reset (soft reset) has been issued through GEL on program load.
+
+[am263-rnd91 +22.3s] cmd 10: C:/t/rnd91-i2c263a/bench/images/rnd91_am263_r5f.out
+GEL: Cortex_R5_0: GEL Output: CPU reset (soft reset) has been issued through GEL on program load.
+
+[am263-rnd91 +24.3s] stop
